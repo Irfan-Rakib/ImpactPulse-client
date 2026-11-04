@@ -40,6 +40,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const handleRegister = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -114,7 +115,7 @@ export default function RegisterPage() {
   };
   const handleGoogleLogin = async () => {
     setError("");
-    setLoading(true);
+    setGoogleLoading(true);
 
     try {
       const response = await fetch("/api/auth/sign-in/social", {
@@ -129,7 +130,7 @@ export default function RegisterPage() {
         }),
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => null);
 
       if (!response.ok) {
         throw new Error(
@@ -137,14 +138,15 @@ export default function RegisterPage() {
         );
       }
 
-      if (data.url) {
+      if (data?.url) {
         window.location.href = data.url;
-      } else {
-        throw new Error("Google login URL was not returned.");
+        return;
       }
+
+      throw new Error("Google login URL was not returned.");
     } catch (error) {
       setError(error instanceof Error ? error.message : "Google login failed.");
-      setLoading(false);
+      setGoogleLoading(false);
     }
   };
 
@@ -408,23 +410,48 @@ export default function RegisterPage() {
                   )}
                 </Button>
               </form>
-              <div className="my-6 flex items-center gap-3">
-                <span className="h-px flex-1 bg-gray-300"></span>
-                <span className="text-sm text-gray-500">or</span>
-                <span className="h-px flex-1 bg-gray-300"></span>
+              {/* Divider */}
+              <div className="my-6 flex items-center gap-4">
+                <div className="h-px flex-1 bg-gray-200" />
+                <span className="text-sm text-gray-400">
+                  OR CONTINUE WITH GOOGLE
+                </span>
+                <div className="h-px flex-1 bg-gray-200" />
               </div>
+              {/* Google Login */}
               <Button
                 type="button"
                 variant="outline"
-                className="w-full"
+                className="w-full py-6"
                 onClick={handleGoogleLogin}
-                disabled={loading}
+                disabled={loading || googleLoading}
               >
-                <img
-                  src="https://www.google.com/favicon.ico"
-                  alt="Google"
-                  className="mr-2 h-5 w-5"
-                />
+                {googleLoading ? (
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                ) : (
+                  <svg
+                    className="mr-2 h-5 w-5"
+                    viewBox="0 0 48 48"
+                    aria-hidden="true"
+                  >
+                    <path
+                      fill="#EA4335"
+                      d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5Z"
+                    />
+                    <path
+                      fill="#4285F4"
+                      d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.24 5.48-4.7 7.18l7.22 5.6c4.22-3.9 6.65-9.65 6.65-17.25Z"
+                    />
+                    <path
+                      fill="#FBBC05"
+                      d="M10.53 28.59A14.4 14.4 0 0 1 9.75 24c0-1.59.27-3.13.76-4.59l-7.98-6.19A23.9 23.9 0 0 0 0 24c0 3.88.93 7.53 2.56 10.78l7.97-6.19Z"
+                    />
+                    <path
+                      fill="#34A853"
+                      d="M24 48c6.48 0 11.93-2.13 15.9-5.8l-7.22-5.6c-2 1.34-4.55 2.13-8.68 2.13-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48Z"
+                    />
+                  </svg>
+                )}
                 Continue with Google
               </Button>
 
