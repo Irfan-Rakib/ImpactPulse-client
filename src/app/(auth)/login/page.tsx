@@ -21,6 +21,7 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
   const [showPassword, setShowPassword] = useState(false);
 
   const [loading, setLoading] = useState(false);
@@ -59,7 +60,9 @@ export default function LoginPage() {
       router.refresh();
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Login failed. Please try again.",
+        err instanceof Error
+          ? err.message
+          : "Something went wrong. Please try again.",
       );
     } finally {
       setLoading(false);
@@ -97,20 +100,20 @@ export default function LoginPage() {
         return;
       }
 
-      throw new Error("Google authorization URL was not returned.");
+      throw new Error("Google login URL was not returned.");
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Unable to login with Google.",
-      );
+      setError(err instanceof Error ? err.message : "Google login failed.");
+
       setGoogleLoading(false);
     }
   };
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 px-4 py-12">
-      <div className="mx-auto grid w-full max-w-6xl items-center gap-12 lg:grid-cols-2">
-        {/* Left Section */}
+      <div className=" mx-auto grid w-full max-w-6xl items-center gap-12 lg:grid-cols-2">
+        {/* LEFT INFORMATION SECTION */}
         <section className="hidden lg:block">
+          {/* Logo */}
           <Link href="/" className="mb-10 inline-flex items-center gap-2">
             <div className="rounded-xl bg-emerald-600 p-3 text-white">
               <HeartHandshake className="h-7 w-7" />
@@ -121,37 +124,41 @@ export default function LoginPage() {
             </span>
           </Link>
 
+          {/* Heading */}
           <h1 className="mb-6 text-5xl font-extrabold leading-tight text-gray-900">
-            Welcome
+            Welcome Back.
             <br />
-            Back to
+            Continue Your
             <br />
-            <span className="text-emerald-600">ImpactPulse.</span>
+            <span className="text-emerald-600">Journey of Impact.</span>
           </h1>
 
+          {/* Description */}
           <p className="max-w-lg text-lg leading-8 text-gray-600">
-            Your contribution matters. Sign in to discover social development
+            Your community needs people like you. Sign in to discover meaningful
             events, connect with volunteers, and continue making a positive
-            impact in your community.
+            difference in people&apos;s lives.
           </p>
 
+          {/* Feature Badges */}
           <div className="mt-8 flex flex-wrap gap-3">
             <span className="rounded-full bg-emerald-100 px-4 py-2 text-sm font-medium text-emerald-700">
-              Help Your Community
+              Community Service
             </span>
 
             <span className="rounded-full bg-teal-100 px-4 py-2 text-sm font-medium text-teal-700">
-              Join Events
+              Volunteer Together
             </span>
 
             <span className="rounded-full bg-sky-100 px-4 py-2 text-sm font-medium text-sky-700">
-              Make a Difference
+              Make an Impact
             </span>
           </div>
         </section>
 
-        {/* Login Form */}
+        {/* RIGHT LOGIN FORM */}
         <section className="w-full">
+          {/* Mobile Logo */}
           <div className="mb-6 text-center lg:hidden">
             <Link href="/" className="inline-flex items-center gap-2">
               <div className="rounded-xl bg-emerald-600 p-2 text-white">
@@ -171,13 +178,13 @@ export default function LoginPage() {
               </CardTitle>
 
               <CardDescription>
-                Login to your ImpactPulse account.
+                Login to your account and continue making a positive impact.
               </CardDescription>
             </CardHeader>
 
             <CardContent>
-              {/* Email Login */}
               <form onSubmit={handleLogin} className="space-y-5">
+                {/* Email */}
                 <div className="space-y-2">
                   <Label htmlFor="email">Email Address</Label>
 
@@ -192,13 +199,22 @@ export default function LoginPage() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
+                      autoComplete="email"
                     />
                   </div>
                 </div>
 
+                {/* Password */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="password">Password</Label>
+
+                    <Link
+                      href="/forgot-password"
+                      className="text-sm font-medium text-emerald-600 hover:underline"
+                    >
+                      Forgot Password?
+                    </Link>
                   </div>
 
                   <div className="relative">
@@ -212,6 +228,7 @@ export default function LoginPage() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
+                      autoComplete="current-password"
                     />
 
                     <button
@@ -241,6 +258,7 @@ export default function LoginPage() {
                   </div>
                 )}
 
+                {/* Login Button */}
                 <Button
                   type="submit"
                   disabled={loading || googleLoading}
@@ -249,21 +267,25 @@ export default function LoginPage() {
                   {loading ? (
                     <>
                       <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      Logging in...
+                      Signing In...
                     </>
                   ) : (
                     "Login"
                   )}
                 </Button>
               </form>
+
               {/* Divider */}
               <div className="my-6 flex items-center gap-4">
                 <div className="h-px flex-1 bg-gray-200" />
+
                 <span className="text-sm text-gray-400">
                   OR CONTINUE WITH GOOGLE
                 </span>
+
                 <div className="h-px flex-1 bg-gray-200" />
               </div>
+
               {/* Google Login */}
               <Button
                 type="button"
@@ -298,7 +320,10 @@ export default function LoginPage() {
                     />
                   </svg>
                 )}
-                Continue with Google
+
+                {googleLoading
+                  ? "Connecting to Google..."
+                  : "Continue with Google"}
               </Button>
 
               {/* Register Link */}
@@ -308,10 +333,11 @@ export default function LoginPage() {
                   href="/register"
                   className="font-semibold text-emerald-600 hover:underline"
                 >
-                  Create Account
+                  Create an Account
                 </Link>
               </div>
 
+              {/* Home Link */}
               <div className="mt-5 text-center">
                 <Link
                   href="/"
