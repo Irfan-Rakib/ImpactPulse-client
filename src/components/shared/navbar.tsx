@@ -185,7 +185,7 @@ export default function Navbar() {
               </Button>
 
               <Button asChild className="bg-emerald-600 hover:bg-emerald-700">
-                <Link href="/register">Join Us</Link>
+                <Link href="/register">Register</Link>
               </Button>
             </>
           )}
@@ -293,7 +293,7 @@ export default function Navbar() {
                     href="/register"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    Join Us
+                    Register
                   </Link>
                 </Button>
               </div>
