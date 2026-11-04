@@ -8,6 +8,7 @@ import {
   MapPin,
   Trash2,
   Eye,
+  Pencil,
   Loader2,
 } from "lucide-react";
 
@@ -162,6 +163,7 @@ export default function MyEventsPage() {
                         <MapPin className="h-4 w-4" />
                         {event.location}
                       </p>
+
                       <p className="flex items-center gap-2">
                         <CalendarDays className="h-4 w-4" />
                         {new Date(event.eventDate).toLocaleDateString()}
@@ -180,6 +182,7 @@ export default function MyEventsPage() {
                         <p className="text-sm font-medium">
                           Are you sure you want to delete this event?
                         </p>
+
                         <div className="flex gap-2">
                           <Button
                             variant="destructive"
@@ -192,6 +195,7 @@ export default function MyEventsPage() {
                             )}
                             Confirm Delete
                           </Button>
+
                           <Button
                             variant="outline"
                             size="sm"
@@ -207,9 +211,17 @@ export default function MyEventsPage() {
                         <Button variant="outline" asChild className="flex-1">
                           <Link href={`/events/${id}`}>
                             <Eye className="mr-2 h-4 w-4" />
-                            View Event
+                            View
                           </Link>
                         </Button>
+
+                        <Button variant="secondary" asChild className="flex-1">
+                          <Link href={`/dashboard/edit-event/${id}`}>
+                            <Pencil className="mr-2 h-4 w-4" />
+                            Edit
+                          </Link>
+                        </Button>
+
                         <Button
                           variant="destructive"
                           size="icon"
