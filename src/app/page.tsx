@@ -108,91 +108,6 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen bg-white text-gray-900">
-      {/* NAVBAR */}
-      <header className="sticky top-0 z-50 border-b bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-600 text-white">
-              <HeartHandshake size={23} />
-            </div>
-
-            <span className="text-2xl font-extrabold tracking-tight">
-              Impact<span className="text-green-600">Pulse</span>
-            </span>
-          </Link>
-
-          <nav className="hidden items-center gap-8 md:flex">
-            <Link href="/" className="text-sm font-semibold text-green-700">
-              Home
-            </Link>
-            <Link
-              href="/events"
-              className="text-sm font-medium text-gray-600 hover:text-green-600"
-            >
-              Explore Events
-            </Link>
-            <Link
-              href="/about"
-              className="text-sm font-medium text-gray-600 hover:text-green-600"
-            >
-              About Us
-            </Link>
-            <Link
-              href="/contact"
-              className="text-sm font-medium text-gray-600 hover:text-green-600"
-            >
-              Contact
-            </Link>
-          </nav>
-
-          <div className="hidden items-center gap-3 md:flex">
-            <Button variant="ghost" asChild>
-              <Link href="/login">Log In</Link>
-            </Button>
-
-            <Button asChild className="bg-green-600 hover:bg-green-700">
-              <Link href="/register">Get Started</Link>
-            </Button>
-          </div>
-
-          <button
-            type="button"
-            aria-label="Toggle navigation menu"
-            className="rounded-lg p-2 hover:bg-gray-100 md:hidden"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          >
-            {mobileMenuOpen ? <X /> : <Menu />}
-          </button>
-        </div>
-
-        {mobileMenuOpen && (
-          <div className="border-t bg-white px-5 py-4 md:hidden">
-            <nav className="flex flex-col gap-4">
-              <Link href="/" onClick={() => setMobileMenuOpen(false)}>
-                Home
-              </Link>
-              <Link href="/events" onClick={() => setMobileMenuOpen(false)}>
-                Explore Events
-              </Link>
-              <Link href="/about" onClick={() => setMobileMenuOpen(false)}>
-                About Us
-              </Link>
-              <Link href="/contact" onClick={() => setMobileMenuOpen(false)}>
-                Contact
-              </Link>
-              <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                Log In
-              </Link>
-              <Button asChild className="bg-green-600 hover:bg-green-700">
-                <Link href="/register" onClick={() => setMobileMenuOpen(false)}>
-                  Get Started
-                </Link>
-              </Button>
-            </nav>
-          </div>
-        )}
-      </header>
-
       {/* HERO SECTION */}
       <section className="relative overflow-hidden bg-green-50">
         <div className="absolute -right-32 -top-32 h-96 w-96 rounded-full bg-green-100/70 blur-3xl" />
@@ -510,81 +425,13 @@ export default function HomePage() {
               size="lg"
               asChild
               variant="outline"
-              className="border-white text-white hover:bg-white hover:text-green-800"
+              className="border-white text-green-800"
             >
               <Link href="/events">Discover Events</Link>
             </Button>
           </div>
         </div>
       </section>
-
-      {/* FOOTER */}
-      <footer className="bg-gray-950 px-5 py-12 text-gray-300">
-        <div className="mx-auto grid max-w-7xl gap-10 sm:grid-cols-2 lg:grid-cols-4">
-          <div>
-            <Link href="/" className="flex items-center gap-2 text-white">
-              <HeartHandshake className="h-8 w-8 text-green-400" />
-              <span className="text-2xl font-extrabold">
-                Impact<span className="text-green-400">Pulse</span>
-              </span>
-            </Link>
-
-            <p className="mt-4 max-w-xs text-sm leading-7 text-gray-400">
-              Connecting people, creating opportunities, and building better
-              communities through meaningful action.
-            </p>
-          </div>
-
-          <div>
-            <h3 className="font-bold text-white">Quick Links</h3>
-            <div className="mt-4 flex flex-col gap-3 text-sm">
-              <Link href="/" className="hover:text-green-400">
-                Home
-              </Link>
-              <Link href="/events" className="hover:text-green-400">
-                Explore Events
-              </Link>
-              <Link href="/about" className="hover:text-green-400">
-                About Us
-              </Link>
-              <Link href="/contact" className="hover:text-green-400">
-                Contact
-              </Link>
-            </div>
-          </div>
-
-          <div>
-            <h3 className="font-bold text-white">Get Involved</h3>
-            <div className="mt-4 flex flex-col gap-3 text-sm">
-              <Link href="/register" className="hover:text-green-400">
-                Become a Volunteer
-              </Link>
-              <Link href="/login" className="hover:text-green-400">
-                Log In
-              </Link>
-              <Link
-                href="/dashboard/create-event"
-                className="hover:text-green-400"
-              >
-                Create an Event
-              </Link>
-            </div>
-          </div>
-
-          <div>
-            <h3 className="font-bold text-white">Our Mission</h3>
-            <p className="mt-4 text-sm leading-7 text-gray-400">
-              We believe meaningful change begins when ordinary people come
-              together for an extraordinary purpose.
-            </p>
-          </div>
-        </div>
-
-        <div className="mx-auto mt-10 max-w-7xl border-t border-gray-800 pt-6 text-center text-sm text-gray-500">
-          © {new Date().getFullYear()} ImpactPulse. All rights reserved. Made
-          for a better community.
-        </div>
-      </footer>
     </main>
   );
 }
