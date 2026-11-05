@@ -30,7 +30,7 @@ export default function MyEventsPage() {
     setError("");
 
     try {
-      const data = await apiRequest<EventsResponse>("/api/my/events", {}, true);
+      const data = await apiRequest<EventsResponse>("/api/events", {}, true);
       setEvents(data.events || []);
     } catch (err) {
       setError(
@@ -56,9 +56,7 @@ export default function MyEventsPage() {
       );
 
       setEvents((previous) =>
-        previous.filter(
-          (event) => event.eventId !== id && event._id !== id,
-        ),
+        previous.filter((event) => event.eventId !== id && event._id !== id),
       );
       setConfirmId(null);
       toast.add({
@@ -69,7 +67,11 @@ export default function MyEventsPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Unable to delete this event.";
-      toast.add({ title: "Delete failed", description: message, type: "error" });
+      toast.add({
+        title: "Delete failed",
+        description: message,
+        type: "error",
+      });
     } finally {
       setDeletingId(null);
     }
@@ -133,7 +135,10 @@ export default function MyEventsPage() {
           <p className="mt-2 text-sm text-muted-foreground">
             Create your first event and invite the community to join.
           </p>
-          <Button className="mt-5" render={<Link href="/dashboard/create-event" />}>
+          <Button
+            className="mt-5"
+            render={<Link href="/dashboard/create-event" />}
+          >
             Create an event
           </Button>
         </div>

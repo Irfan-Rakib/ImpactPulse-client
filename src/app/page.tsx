@@ -154,10 +154,7 @@ export default function HomePage() {
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
-              <Button
-                size="lg"
-                render={<Link href="/events" />}
-              >
+              <Button size="lg" render={<Link href="/events" />}>
                 Explore events
                 <ArrowRight className="ml-2 size-5" />
               </Button>
@@ -297,7 +294,10 @@ export default function HomePage() {
               <p className="mt-2 text-sm text-muted-foreground">
                 Be the first to create an opportunity for your community.
               </p>
-              <Button className="mt-5" render={<Link href="/dashboard/create-event" />}>
+              <Button
+                className="mt-5"
+                render={<Link href="/dashboard/create-event" />}
+              >
                 Create an event
               </Button>
             </div>
@@ -364,12 +364,15 @@ export default function HomePage() {
                 Good news, delivered with purpose.
               </h2>
               <p className="mt-3 max-w-lg leading-7 text-slate-400">
-                Get a short monthly note about new events, volunteer stories, and
-                ways to help near you. No spam, ever.
+                Get a short monthly note about new events, volunteer stories,
+                and ways to help near you. No spam, ever.
               </p>
             </div>
 
-            <form onSubmit={handleNewsletter} className="flex flex-col gap-3 sm:flex-row">
+            <form
+              onSubmit={handleNewsletter}
+              className="flex flex-col gap-3 sm:flex-row"
+            >
               <Input
                 type="email"
                 aria-label="Email address"
@@ -379,7 +382,11 @@ export default function HomePage() {
                 className="h-12 border-white/15 bg-white/10 text-white placeholder:text-slate-400 focus-visible:ring-emerald-400"
                 required
               />
-              <Button type="submit" size="lg" className="shrink-0 bg-emerald-500 text-slate-950 hover:bg-emerald-400">
+              <Button
+                type="submit"
+                size="lg"
+                className="shrink-0 bg-emerald-500 text-slate-950 hover:bg-emerald-400"
+              >
                 Subscribe
                 <ArrowRight className="ml-2 size-4" />
               </Button>
@@ -388,7 +395,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="bg-primary px-5 py-16 text-primary-foreground sm:px-6 lg:px-8 lg:py-20">
+      <section className="bg-secondary px-5 py-16 text-primary-foreground sm:px-6 lg:px-8 lg:py-20">
         <div className="mx-auto max-w-4xl text-center">
           <HeartHandshake className="mx-auto size-14 opacity-80" />
           <h2 className="mt-6 text-3xl font-extrabold sm:text-4xl">

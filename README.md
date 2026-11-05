@@ -2,7 +2,7 @@
 
 **ImpactPulse** is a community-driven social development platform that connects people who want to make a positive impact in their communities. Users can create social service events, join volunteer activities, and manage their participation through a simple and user-friendly interface.
 
-🌐 **Live Website:** [Add Your Live Website URL]
+🌐 **Live Website:** [[Click Here](https://impact-pulse-one.vercel.app/)]
 
 💻 **Client Repository:** [[Click Here](https://github.com/Irfan-Rakib/ImpactPulse-client)]
 
@@ -126,7 +126,7 @@ npm run dev
 The backend will run at:
 
 ```text
-http://localhost:5000
+https://impact-pulse-server.vercel.app/
 ```
 
 ### 4. Setup the Frontend
