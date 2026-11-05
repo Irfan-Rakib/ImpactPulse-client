@@ -1,437 +1,428 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
   CalendarDays,
-  MapPin,
-  Users,
-  HeartHandshake,
-  Search,
-  Leaf,
-  GraduationCap,
-  HeartPulse,
+  CheckCircle2,
   HandHeart,
-  Menu,
-  X,
-  Sparkles,
+  HeartHandshake,
+  Leaf,
   Loader2,
+  MapPin,
+  Megaphone,
+  Send,
+  ShieldCheck,
+  Sparkles,
+  Users,
 } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import EventCard from "@/components/shared/event-card";
+import EventCardSkeleton from "@/components/shared/event-card-skeleton";
 import { Badge } from "@/components/ui/badge";
-
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { toast } from "@/components/ui/toast";
 import { apiRequest } from "@/lib/api";
-import type { EventItem, EventsResponse } from "@/types/event";
+import { SITE } from "@/lib/constants";
+import type { EventsResponse, EventItem } from "@/types/event";
 
-const categories = [
-  { name: "All Events", icon: Sparkles },
-  { name: "Community Service", icon: HandHeart },
-  { name: "Education", icon: GraduationCap },
-  { name: "Environment", icon: Leaf },
-  { name: "Health", icon: HeartPulse },
-  { name: "Food Distribution", icon: HeartHandshake },
+const features = [
+  {
+    icon: CalendarDays,
+    title: "Create with purpose",
+    description:
+      "Publish a community event in minutes with a clear date, location, and volunteer target.",
+  },
+  {
+    icon: Users,
+    title: "Volunteer together",
+    description:
+      "Join events that match your values and meet people who want to make a difference too.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Organizer control",
+    description:
+      "Only you can edit or delete the events you create, with protected routes and JWT-backed APIs.",
+  },
+  {
+    icon: Megaphone,
+    title: "Real community impact",
+    description:
+      "Track participation and keep your volunteers informed from one simple dashboard.",
+  },
 ];
 
-function formatDate(date: string) {
-  return new Date(date).toLocaleDateString("en-BD", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
-
-function getCategoryColor(category: string) {
-  const colors: Record<string, string> = {
-    "Community Service": "bg-blue-100 text-blue-700",
-    Education: "bg-purple-100 text-purple-700",
-    Environment: "bg-green-100 text-green-700",
-    Health: "bg-red-100 text-red-700",
-    "Food Distribution": "bg-orange-100 text-orange-700",
-  };
-
-  return colors[category] || "bg-gray-100 text-gray-700";
-}
+const gallery = [
+  {
+    src: "https://images.unsplash.com/photo-1559027615-cd4628902d4a?auto=format&fit=crop&w=900&q=80",
+    title: "Community clean-up",
+  },
+  {
+    src: "https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=900&q=80",
+    title: "Food distribution",
+  },
+  {
+    src: "https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?auto=format&fit=crop&w=900&q=80",
+    title: "Team volunteering",
+  },
+  {
+    src: "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=900&q=80",
+    title: "Plantation drive",
+  },
+  {
+    src: "https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?auto=format&fit=crop&w=900&q=80",
+    title: "Neighbourhood care",
+  },
+  {
+    src: "https://images.unsplash.com/photo-1542810634-71277d95dcbb?auto=format&fit=crop&w=900&q=80",
+    title: "Learning together",
+  },
+];
 
 export default function HomePage() {
   const [events, setEvents] = useState<EventItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [category, setCategory] = useState("All Events");
-  const [searchText, setSearchText] = useState("");
-  const [search, setSearch] = useState("");
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [email, setEmail] = useState("");
 
   const loadEvents = useCallback(async () => {
     setLoading(true);
     setError("");
 
     try {
-      const params = new URLSearchParams();
-
-      params.set("limit", "6");
-
-      if (category !== "All Events") {
-        params.set("category", category);
-      }
-
-      if (search.trim()) {
-        params.set("search", search.trim());
-      }
-
-      const result = await apiRequest<EventsResponse>(
-        `/api/events?${params.toString()}`,
-      );
-
+      const result = await apiRequest<EventsResponse>("/api/events?limit=6");
       setEvents(result.events || []);
     } catch (err) {
       setError(
-        err instanceof Error
-          ? err.message
-          : "Unable to load events. Please try again.",
+        err instanceof Error ? err.message : "Unable to load upcoming events.",
       );
     } finally {
       setLoading(false);
     }
-  }, [category, search]);
+  }, []);
 
   useEffect(() => {
     loadEvents();
   }, [loadEvents]);
 
-  function handleSearch(event: React.FormEvent<HTMLFormElement>) {
+  function handleNewsletter(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setSearch(searchText);
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      toast.add({
+        title: "Invalid email",
+        description: "Please enter a valid email address.",
+        type: "error",
+      });
+      return;
+    }
+
+    toast.add({
+      title: "You're on the list!",
+      description: "Thank you for subscribing to the ImpactPulse newsletter.",
+      type: "success",
+    });
+    setEmail("");
   }
 
   return (
-    <main className="min-h-screen bg-white text-gray-900">
-      {/* HERO SECTION */}
-      <section className="relative overflow-hidden bg-green-50">
-        <div className="absolute -right-32 -top-32 h-96 w-96 rounded-full bg-green-100/70 blur-3xl" />
-        <div className="absolute -bottom-40 -left-32 h-96 w-96 rounded-full bg-emerald-100/70 blur-3xl" />
+    <main>
+      <section className="relative overflow-hidden bg-gradient-to-br from-emerald-50 via-background to-teal-50 dark:from-emerald-950/40 dark:via-background dark:to-teal-950/20">
+        <div className="pointer-events-none absolute -left-24 top-10 size-80 rounded-full bg-emerald-200/40 blur-3xl dark:bg-emerald-900/20" />
+        <div className="pointer-events-none absolute -right-16 bottom-0 size-96 rounded-full bg-teal-200/40 blur-3xl dark:bg-teal-900/20" />
 
-        <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-5 py-20 md:grid-cols-2 md:py-28">
+        <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-5 py-16 sm:px-6 md:grid-cols-2 md:py-24 lg:px-8">
           <div>
-            <Badge className="mb-6 border-0 bg-green-100 px-4 py-2 text-green-700 hover:bg-green-100">
-              <HeartHandshake className="mr-2 h-4 w-4" />
-              Together, We Create Impact
+            <Badge className="mb-6 border-0 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/10">
+              <Sparkles className="mr-2 size-4" />
+              Together, we create impact
             </Badge>
 
-            <h1 className="max-w-2xl text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
-              Small Actions.
-              <span className="block text-green-600">Big Changes.</span>
-              Better Communities.
+            <h1 className="max-w-2xl text-4xl font-extrabold leading-[1.08] tracking-tight sm:text-5xl lg:text-6xl">
+              Small actions.
+              <span className="block text-primary">Big changes.</span>
+              Better communities.
             </h1>
 
-            <p className="mt-6 max-w-xl text-lg leading-8 text-gray-600">
-              Discover meaningful volunteer opportunities, join community
-              events, and make a real difference in the lives of people around
-              you.
+            <p className="mt-6 max-w-xl text-lg leading-8 text-muted-foreground">
+              ImpactPulse connects people and ideas to social development
+              events. Discover a cause, join a team, or create your own
+              opportunity to give back.
             </p>
 
-            <div className="mt-8 flex flex-wrap gap-4">
+            <div className="mt-8 flex flex-wrap gap-3">
               <Button
                 size="lg"
-                asChild
-                className="bg-green-600 px-7 hover:bg-green-700"
+                render={<Link href="/events" />}
               >
-                <Link href="/events">
-                  Explore Events <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
+                Explore events
+                <ArrowRight className="ml-2 size-5" />
               </Button>
-
-              <Button size="lg" variant="outline" asChild>
-                <Link href="/register">Become a Volunteer</Link>
+              <Button
+                size="lg"
+                variant="outline"
+                render={<Link href="/register" />}
+              >
+                Become a volunteer
               </Button>
             </div>
 
-            <div className="mt-10 flex flex-wrap gap-8">
-              <div>
-                <p className="text-3xl font-extrabold text-gray-900">100%</p>
-                <p className="mt-1 text-sm text-gray-500">Community Driven</p>
-              </div>
-              <div>
-                <p className="text-3xl font-extrabold text-gray-900">One</p>
-                <p className="mt-1 text-sm text-gray-500">Shared Mission</p>
-              </div>
-              <div>
-                <p className="text-3xl font-extrabold text-gray-900">∞</p>
-                <p className="mt-1 text-sm text-gray-500">Possibilities</p>
-              </div>
+            <div className="mt-10 grid max-w-md grid-cols-3 gap-4">
+              {[
+                { value: "100%", label: "Community driven" },
+                { value: "6+", label: "Ways to help" },
+                { value: "∞", label: "Possibilities" },
+              ].map((stat) => (
+                <div key={stat.label}>
+                  <p className="text-3xl font-extrabold tracking-tight text-primary">
+                    {stat.value}
+                  </p>
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                    {stat.label}
+                  </p>
+                </div>
+              ))}
             </div>
           </div>
 
-          <div className="relative">
-            <div className="rounded-[2rem] bg-green-200 p-4 shadow-xl">
-              <div className="flex min-h-[360px] flex-col justify-between rounded-[1.5rem] bg-gradient-to-br from-green-700 via-green-600 to-emerald-500 p-8 text-white sm:min-h-[420px]">
-                <div>
-                  <span className="inline-flex items-center rounded-full bg-white/20 px-4 py-2 text-sm font-semibold">
-                    <Sparkles className="mr-2 h-4 w-4" />
-                    Make Every Action Count
-                  </span>
+          <div className="relative mx-auto w-full max-w-lg">
+            <div className="overflow-hidden rounded-[2rem] border border-border/60 bg-card p-3 shadow-2xl shadow-emerald-950/10">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="https://images.unsplash.com/photo-1559027615-cd4628902d4a?auto=format&fit=crop&w=1000&q=85"
+                alt="Volunteers working together in the community"
+                className="h-[360px] w-full rounded-[1.5rem] object-cover sm:h-[430px]"
+              />
+            </div>
 
-                  <h2 className="mt-8 max-w-sm text-4xl font-extrabold leading-tight">
-                    Be the reason someone smiles today.
-                  </h2>
-
-                  <p className="mt-4 max-w-sm text-green-50">
-                    Your time, kindness, and effort can transform a community.
-                  </p>
-                </div>
-
-                <div className="mt-8 flex items-center justify-between rounded-2xl bg-white/15 p-5 backdrop-blur">
-                  <div>
-                    <p className="text-sm text-green-50">Your next step</p>
-                    <p className="mt-1 text-xl font-bold">Join a local event</p>
-                  </div>
-                  <HeartHandshake size={45} />
-                </div>
+            <div className="absolute -bottom-5 -left-3 flex items-center gap-3 rounded-2xl border border-border bg-card p-4 shadow-xl sm:-left-8">
+              <span className="flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <HandHeart className="size-5" />
+              </span>
+              <div>
+                <p className="text-sm font-bold">Stronger together</p>
+                <p className="text-xs text-muted-foreground">
+                  Every volunteer matters
+                </p>
               </div>
             </div>
 
-            <div className="absolute -bottom-5 -left-4 rounded-2xl bg-white p-4 shadow-lg sm:-left-8">
-              <div className="flex items-center gap-3">
-                <div className="rounded-full bg-green-100 p-3 text-green-700">
-                  <Users size={22} />
-                </div>
-                <div>
-                  <p className="font-bold">Stronger Together</p>
-                  <p className="text-xs text-gray-500">
-                    Every volunteer matters
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* SEARCH SECTION */}
-      <section className="relative z-10 mx-auto -mt-1 max-w-5xl px-5">
-        <Card className="border-0 shadow-lg">
-          <CardContent className="p-5 sm:p-7">
-            <div className="mb-4">
-              <h2 className="text-xl font-bold">
-                Find an opportunity to make a difference
-              </h2>
-              <p className="mt-1 text-sm text-gray-500">
-                Search for events by name, category, or location.
+            <div className="absolute -right-3 top-5 rounded-2xl border border-border bg-card px-4 py-3 shadow-xl sm:-right-6">
+              <p className="flex items-center gap-2 text-sm font-bold">
+                <CheckCircle2 className="size-4 text-primary" />
+                Make it count
               </p>
             </div>
-
-            <form
-              onSubmit={handleSearch}
-              className="flex flex-col gap-3 sm:flex-row"
-            >
-              <div className="relative flex-1">
-                <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-                <input
-                  value={searchText}
-                  onChange={(event) => setSearchText(event.target.value)}
-                  placeholder="Search events or locations..."
-                  className="h-12 w-full rounded-lg border border-gray-200 bg-gray-50 pl-12 pr-4 outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-100"
-                />
-              </div>
-
-              <Button
-                type="submit"
-                className="h-12 bg-green-600 px-8 hover:bg-green-700"
-              >
-                Search Events
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </section>
 
-      {/* EVENTS SECTION */}
-      <section className="mx-auto max-w-7xl px-5 py-20">
-        <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
-          <div>
-            <Badge className="border-0 bg-green-100 text-green-700 hover:bg-green-100">
-              Make a Difference
-            </Badge>
-            <h2 className="mt-4 text-3xl font-extrabold tracking-tight sm:text-4xl">
-              Explore Community Events
-            </h2>
-            <p className="mt-3 max-w-xl text-gray-500">
-              Find an opportunity that matches your passion and start creating
-              positive change.
-            </p>
-          </div>
-
-          <Button variant="outline" asChild>
-            <Link href="/events">
-              View All Events <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
-          </Button>
+      <section className="mx-auto max-w-7xl px-5 py-16 sm:px-6 lg:px-8 lg:py-20">
+        <div className="max-w-2xl">
+          <Badge variant="secondary" className="mb-4">
+            Why ImpactPulse
+          </Badge>
+          <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">
+            Everything you need to turn kindness into action
+          </h2>
+          <p className="mt-3 leading-7 text-muted-foreground">
+            A focused toolkit for volunteers and organizers — no noise, just
+            meaningful community work.
+          </p>
         </div>
 
-        {/* CATEGORY FILTERS */}
-        <div className="mt-8 flex gap-2 overflow-x-auto pb-3">
-          {categories.map((item) => {
-            const Icon = item.icon;
-            const active = category === item.name;
-
+        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {features.map((feature) => {
+            const Icon = feature.icon;
             return (
-              <button
-                key={item.name}
-                type="button"
-                onClick={() => setCategory(item.name)}
-                className={`flex shrink-0 items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold transition ${
-                  active
-                    ? "border-green-600 bg-green-600 text-white"
-                    : "border-gray-200 bg-white text-gray-600 hover:border-green-500 hover:text-green-700"
-                }`}
+              <div
+                key={feature.title}
+                className="group rounded-2xl border border-border bg-card p-6 transition hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg"
               >
-                <Icon size={16} />
-                {item.name}
-              </button>
+                <span className="flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary transition group-hover:bg-primary group-hover:text-primary-foreground">
+                  <Icon className="size-5" />
+                </span>
+                <h3 className="mt-4 font-bold">{feature.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  {feature.description}
+                </p>
+              </div>
             );
           })}
         </div>
-
-        {/* EVENT LIST */}
-        {loading ? (
-          <div className="flex min-h-64 items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-green-600" />
-            <span className="ml-3 text-gray-500">Loading events...</span>
-          </div>
-        ) : error ? (
-          <div className="mt-8 rounded-xl border border-red-200 bg-red-50 p-8 text-center">
-            <p className="font-semibold text-red-700">{error}</p>
-            <Button onClick={loadEvents} variant="outline" className="mt-4">
-              Try Again
-            </Button>
-          </div>
-        ) : events.length === 0 ? (
-          <div className="mt-8 rounded-xl border border-dashed p-12 text-center">
-            <HeartHandshake className="mx-auto h-12 w-12 text-gray-300" />
-            <h3 className="mt-4 text-xl font-bold">No events found</h3>
-            <p className="mt-2 text-gray-500">
-              Try another category or search for something different.
-            </p>
-            <Button
-              className="mt-5 bg-green-600 hover:bg-green-700"
-              onClick={() => {
-                setCategory("All Events");
-                setSearch("");
-                setSearchText("");
-              }}
-            >
-              Show All Events
-            </Button>
-          </div>
-        ) : (
-          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {events.map((event) => (
-              <Card
-                key={event.eventId || event._id}
-                className="group overflow-hidden border-gray-100 transition duration-300 hover:-translate-y-1 hover:shadow-xl"
-              >
-                <div className="relative flex h-48 items-center justify-center overflow-hidden bg-gradient-to-br from-green-100 via-emerald-50 to-teal-100">
-                  {event.imageUrl ? (
-                    <img
-                      src={event.imageUrl}
-                      alt={event.title}
-                      className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                    />
-                  ) : (
-                    <HeartHandshake
-                      size={65}
-                      className="text-green-300 transition duration-500 group-hover:scale-110"
-                    />
-                  )}
-
-                  <Badge
-                    className={`absolute left-4 top-4 border-0 ${getCategoryColor(
-                      event.category,
-                    )}`}
-                  >
-                    {event.category}
-                  </Badge>
-                </div>
-
-                <CardContent className="p-5">
-                  <h3 className="line-clamp-2 min-h-14 text-lg font-bold transition group-hover:text-green-700">
-                    {event.title}
-                  </h3>
-
-                  <div className="mt-4 space-y-3 text-sm text-gray-500">
-                    <div className="flex items-center gap-2">
-                      <CalendarDays
-                        size={17}
-                        className="shrink-0 text-green-600"
-                      />
-                      {formatDate(event.eventDate)}
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <MapPin size={17} className="shrink-0 text-green-600" />
-                      <span className="line-clamp-1">{event.location}</span>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <Users size={17} className="shrink-0 text-green-600" />
-                      {event.participantCount || 0} / {event.volunteersNeeded}{" "}
-                      volunteers
-                    </div>
-                  </div>
-
-                  <div className="mt-5 border-t pt-4">
-                    <Button
-                      asChild
-                      className="w-full bg-green-600 hover:bg-green-700"
-                    >
-                      <Link href={`/events/${event.eventId || event._id}`}>
-                        View Details <ArrowRight className="ml-2 h-4 w-4" />
-                      </Link>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
       </section>
 
-      {/* CALL TO ACTION */}
-      <section className="bg-green-700 px-5 py-20 text-white">
-        <div className="mx-auto max-w-5xl text-center">
-          <HeartHandshake className="mx-auto h-14 w-14 text-green-200" />
+      <section className="border-y border-border bg-muted/30">
+        <div className="mx-auto max-w-7xl px-5 py-16 sm:px-6 lg:px-8 lg:py-20">
+          <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
+            <div>
+              <Badge className="mb-4 border-0 bg-primary/10 text-primary hover:bg-primary/10">
+                <CalendarDays className="mr-1.5 size-3.5" />
+                Upcoming near you
+              </Badge>
+              <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">
+                Recent upcoming events
+              </h2>
+              <p className="mt-3 max-w-xl text-muted-foreground">
+                The next six opportunities to show up for your community.
+              </p>
+            </div>
 
+            <Button variant="outline" render={<Link href="/events" />}>
+              View all events
+              <ArrowRight className="ml-2 size-4" />
+            </Button>
+          </div>
+
+          {loading ? (
+            <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <EventCardSkeleton key={index} />
+              ))}
+            </div>
+          ) : error ? (
+            <div className="mt-10 rounded-2xl border border-destructive/30 bg-destructive/5 p-8 text-center">
+              <p className="font-semibold text-destructive">{error}</p>
+              <Button variant="outline" className="mt-4" onClick={loadEvents}>
+                Try again
+              </Button>
+            </div>
+          ) : events.length === 0 ? (
+            <div className="mt-10 rounded-2xl border border-dashed border-border p-12 text-center">
+              <HeartHandshake className="mx-auto size-12 text-muted-foreground/40" />
+              <h3 className="mt-4 text-xl font-bold">No upcoming events yet</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Be the first to create an opportunity for your community.
+              </p>
+              <Button className="mt-5" render={<Link href="/dashboard/create-event" />}>
+                Create an event
+              </Button>
+            </div>
+          ) : (
+            <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {events.map((event) => (
+                <EventCard key={event.eventId || event._id} event={event} />
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-5 py-16 sm:px-6 lg:px-8 lg:py-20">
+        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+          <div className="max-w-2xl">
+            <Badge variant="secondary" className="mb-4">
+              <Leaf className="mr-1.5 size-3.5" />
+              Moments that matter
+            </Badge>
+            <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">
+              Real people. Real community work.
+            </h2>
+            <p className="mt-3 leading-7 text-muted-foreground">
+              A glimpse of the energy volunteers bring to neighbourhoods every
+              week.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {gallery.map((photo, index) => (
+            <div
+              key={photo.src}
+              className={`group relative overflow-hidden rounded-2xl ${
+                index === 0 ? "sm:col-span-2 lg:col-span-1" : ""
+              }`}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={photo.src}
+                alt={photo.title}
+                loading="lazy"
+                className="h-64 w-full object-cover transition duration-500 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+              <p className="absolute bottom-4 left-4 text-sm font-semibold text-white">
+                {photo.title}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="px-5 pb-16 sm:px-6 lg:px-8 lg:pb-20">
+        <div className="mx-auto max-w-7xl overflow-hidden rounded-3xl bg-slate-950 px-6 py-12 text-white shadow-2xl sm:px-10 lg:px-14">
+          <div className="grid items-center gap-8 lg:grid-cols-2">
+            <div>
+              <Badge className="border-0 bg-white/10 text-emerald-300 hover:bg-white/10">
+                <Send className="mr-1.5 size-3.5" />
+                Stay in the loop
+              </Badge>
+              <h2 className="mt-4 text-3xl font-extrabold tracking-tight sm:text-4xl">
+                Good news, delivered with purpose.
+              </h2>
+              <p className="mt-3 max-w-lg leading-7 text-slate-400">
+                Get a short monthly note about new events, volunteer stories, and
+                ways to help near you. No spam, ever.
+              </p>
+            </div>
+
+            <form onSubmit={handleNewsletter} className="flex flex-col gap-3 sm:flex-row">
+              <Input
+                type="email"
+                aria-label="Email address"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                className="h-12 border-white/15 bg-white/10 text-white placeholder:text-slate-400 focus-visible:ring-emerald-400"
+                required
+              />
+              <Button type="submit" size="lg" className="shrink-0 bg-emerald-500 text-slate-950 hover:bg-emerald-400">
+                Subscribe
+                <ArrowRight className="ml-2 size-4" />
+              </Button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-primary px-5 py-16 text-primary-foreground sm:px-6 lg:px-8 lg:py-20">
+        <div className="mx-auto max-w-4xl text-center">
+          <HeartHandshake className="mx-auto size-14 opacity-80" />
           <h2 className="mt-6 text-3xl font-extrabold sm:text-4xl">
-            Your Community Needs You.
+            Your community needs you.
           </h2>
-
-          <p className="mx-auto mt-5 max-w-2xl leading-7 text-green-100">
-            Whether you have an hour or a whole day, your contribution can help
+          <p className="mx-auto mt-4 max-w-2xl leading-7 opacity-80">
+            Whether you have an hour or a whole day, your contribution helps
             build a stronger, kinder, and more caring society.
           </p>
-
-          <div className="mt-8 flex flex-wrap justify-center gap-4">
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Button
               size="lg"
-              asChild
-              className="bg-white text-green-800 hover:bg-green-50"
+              className="bg-primary-foreground text-primary hover:bg-primary-foreground/90"
+              render={<Link href="/register" />}
             >
-              <Link href="/register">Join Our Community</Link>
+              Join the community
             </Button>
-
             <Button
               size="lg"
-              asChild
               variant="outline"
-              className="border-white text-green-800"
+              className="border-primary-foreground/40 bg-transparent text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
+              render={<Link href="/events" />}
             >
-              <Link href="/events">Discover Events</Link>
+              Discover events
             </Button>
           </div>
         </div>
       </section>
+
+      <div className="sr-only">
+        <p>
+          {SITE.name}: {SITE.tagline}
+        </p>
+      </div>
     </main>
   );
 }

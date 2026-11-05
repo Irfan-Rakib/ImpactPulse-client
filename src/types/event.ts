@@ -1,6 +1,8 @@
 export interface EventParticipant {
   userId: string;
   name: string;
+  email?: string;
+  image?: string;
   joinedAt: string;
 }
 
@@ -18,6 +20,7 @@ export interface EventItem {
   imageUrl?: string;
   createdBy: string;
   createdByName: string;
+  createdByEmail?: string;
   participants: EventParticipant[];
   participantCount: number;
   createdAt: string;

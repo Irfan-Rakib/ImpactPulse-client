@@ -1,24 +1,31 @@
 "use client";
 
+import { Suspense } from "react";
 import { usePathname } from "next/navigation";
-import Navbar from "@/components/shared/navbar";
-import Footer from "@/components/shared/footer";
 
-export default function SiteShell({ children }: { children: React.ReactNode }) {
+import Footer from "@/components/shared/footer";
+import Navbar from "@/components/shared/navbar";
+
+function SiteShellContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
-  // Dashboard has its own sidebar layout.
-  const isDashboard = pathname.startsWith("/dashboard");
-
-  if (isDashboard) {
-    return <>{children}</>;
-  }
+  const isAuthPage = pathname === "/login" || pathname === "/register";
 
   return (
     <>
       <Navbar />
-      {children}
-      <Footer />
+
+      <main className="flex-1">{children}</main>
+
+      {!isAuthPage && <Footer />}
     </>
+  );
+}
+
+export default function SiteShell({ children }: { children: React.ReactNode }) {
+  return (
+    <Suspense fallback={<div className="flex-1 min-h-screen" />}>
+      <SiteShellContent>{children}</SiteShellContent>
+    </Suspense>
   );
 }

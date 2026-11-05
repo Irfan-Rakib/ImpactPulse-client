@@ -1,43 +1,62 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
 import {
+  CalendarPlus,
+  ChevronDown,
   HeartHandshake,
-  Menu,
-  X,
   LayoutDashboard,
   LogOut,
+  Menu,
+  Settings,
+  Ticket,
   UserRound,
-  ChevronDown,
+  X,
 } from "lucide-react";
 
-import { useSession, signOut } from "@/lib/auth-client";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { clearAuthToken } from "@/lib/api";
+import { useSession, signOut } from "@/lib/auth-client";
+import ThemeToggle from "@/components/shared/theme-toggle";
+import { toast } from "@/components/ui/toast";
 
 const navLinks = [
   { title: "Home", href: "/" },
-  { title: "Events", href: "/events" },
+  { title: "Upcoming Events", href: "/events" },
   { title: "About", href: "/about" },
   { title: "Contact", href: "/contact" },
+];
+
+const accountLinks = [
+  { title: "Create Event", href: "/dashboard/create-event", icon: CalendarPlus },
+  { title: "Manage Events", href: "/dashboard/my-events", icon: Settings },
+  { title: "Joined Events", href: "/dashboard/joined-events", icon: Ticket },
+  { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { title: "My Profile", href: "/dashboard/profile", icon: UserRound },
 ];
 
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
-
   const { data: session, isPending } = useSession();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
-  const [logoutError, setLogoutError] = useState("");
 
   const user = session?.user;
   const userName = user?.name || "ImpactPulse User";
   const userEmail = user?.email || "";
+  const userImage = user?.image || "";
   const userInitial = userName.charAt(0).toUpperCase();
+
+  useEffect(() => {
+    setMobileMenuOpen(false);
+    setProfileMenuOpen(false);
+  }, [pathname]);
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";
@@ -46,51 +65,48 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     setLoggingOut(true);
-    setLogoutError("");
 
     try {
       await signOut();
-      setProfileMenuOpen(false);
-      setMobileMenuOpen(false);
+      clearAuthToken();
+      toast.add({
+        title: "Logged out",
+        description: "You have been signed out safely.",
+        type: "success",
+      });
       router.replace("/");
       router.refresh();
-    } catch (error) {
-      console.error("Logout failed:", error);
-      setLogoutError("Logout failed. Please try again.");
+    } catch {
+      toast.add({
+        title: "Logout failed",
+        description: "Please try again.",
+        type: "error",
+      });
     } finally {
       setLoggingOut(false);
     }
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur-md">
-      <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        {/* Logo */}
-        <Link
-          href="/"
-          className="flex shrink-0 items-center gap-2"
-          onClick={() => setMobileMenuOpen(false)}
-        >
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-sm">
-            <HeartHandshake className="h-6 w-6" />
+    <header className="sticky top-0 z-50 border-b border-border/70 bg-background/85 backdrop-blur-xl">
+      <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+        <Link href="/" className="flex shrink-0 items-center gap-2.5">
+          <span className="flex size-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm shadow-primary/30">
+            <HeartHandshake className="size-6" />
           </span>
-
-          <span className="text-xl font-extrabold tracking-tight text-slate-900">
-            Impact<span className="text-emerald-600">Pulse</span>
+          <span className="text-xl font-extrabold tracking-tight">
+            Impact<span className="text-primary">Pulse</span>
           </span>
         </Link>
 
-        {/* Desktop navigation */}
-        <div className="hidden items-center gap-7 md:flex">
+        <div className="hidden items-center gap-6 lg:flex">
           {navLinks.map((item) => (
             <Link
               key={item.href}
               href={item.href}
               aria-current={isActive(item.href) ? "page" : undefined}
-              className={`text-sm font-medium transition-colors ${
-                isActive(item.href)
-                  ? "text-emerald-700"
-                  : "text-slate-600 hover:text-emerald-700"
+              className={`text-sm font-medium transition-colors hover:text-primary ${
+                isActive(item.href) ? "text-primary" : "text-muted-foreground"
               }`}
             >
               {item.title}
@@ -98,28 +114,36 @@ export default function Navbar() {
           ))}
         </div>
 
-        {/* Desktop authentication area */}
-        <div className="hidden items-center gap-3 md:flex">
+        <div className="hidden items-center gap-2 md:flex">
+          <ThemeToggle />
+
           {isPending ? (
-            <div className="h-9 w-28 animate-pulse rounded-lg bg-slate-100" />
+            <div className="h-9 w-24 animate-pulse rounded-lg bg-muted" />
           ) : user ? (
             <div className="relative">
               <button
                 type="button"
                 onClick={() => setProfileMenuOpen((previous) => !previous)}
-                className="flex items-center gap-2 rounded-full border border-slate-200 py-1.5 pl-1.5 pr-3 transition hover:bg-slate-50"
+                className="group/profile flex items-center gap-2 rounded-full border border-border bg-card py-1 pl-1 pr-2.5 transition hover:border-primary/40 hover:bg-accent"
                 aria-expanded={profileMenuOpen}
                 aria-label="Open profile menu"
               >
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-sm font-bold text-emerald-700">
-                  {userInitial}
+                <span className="relative">
+                  <Avatar size="default">
+                    {userImage ? (
+                      <AvatarImage src={userImage} alt={userName} />
+                    ) : null}
+                    <AvatarFallback className="bg-primary/10 font-bold text-primary">
+                      {userInitial}
+                    </AvatarFallback>
+                  </Avatar>
+
+                  <span className="pointer-events-none absolute left-1/2 top-full z-50 mt-2 w-max max-w-40 -translate-x-1/2 truncate rounded-md bg-foreground px-2 py-1 text-xs font-medium text-background opacity-0 shadow-md transition-opacity group-hover/profile:opacity-100">
+                    {userName}
+                  </span>
                 </span>
 
-                <span className="max-w-32 truncate text-sm font-semibold text-slate-700">
-                  {userName}
-                </span>
-
-                <ChevronDown className="h-4 w-4 text-slate-500" />
+                <ChevronDown className="size-4 text-muted-foreground" />
               </button>
 
               {profileMenuOpen && (
@@ -131,47 +155,48 @@ export default function Navbar() {
                     onClick={() => setProfileMenuOpen(false)}
                   />
 
-                  <div className="absolute right-0 top-12 z-50 w-64 rounded-xl border border-slate-200 bg-white p-2 shadow-xl">
-                    <div className="border-b px-3 py-3">
-                      <p className="truncate text-sm font-semibold text-slate-900">
-                        {userName}
-                      </p>
-                      <p className="truncate text-xs text-slate-500">
-                        {userEmail}
-                      </p>
+                  <div className="absolute right-0 top-12 z-50 w-64 overflow-hidden rounded-xl border border-border bg-popover p-2 text-popover-foreground shadow-2xl">
+                    <div className="flex items-center gap-3 border-b border-border px-3 pb-3 pt-2">
+                      <Avatar size="lg">
+                        {userImage ? (
+                          <AvatarImage src={userImage} alt={userName} />
+                        ) : null}
+                        <AvatarFallback className="bg-primary/10 font-bold text-primary">
+                          {userInitial}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold">{userName}</p>
+                        <p className="truncate text-xs text-muted-foreground">
+                          {userEmail}
+                        </p>
+                      </div>
                     </div>
 
-                    <Link
-                      href="/dashboard"
-                      onClick={() => setProfileMenuOpen(false)}
-                      className="mt-2 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-slate-700 transition hover:bg-emerald-50 hover:text-emerald-700"
-                    >
-                      <LayoutDashboard className="h-4 w-4" />
-                      Dashboard
-                    </Link>
-
-                    <Link
-                      href="/dashboard/my-events"
-                      onClick={() => setProfileMenuOpen(false)}
-                      className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-slate-700 transition hover:bg-emerald-50 hover:text-emerald-700"
-                    >
-                      <UserRound className="h-4 w-4" />
-                      My Events
-                    </Link>
-
-                    {logoutError && (
-                      <p className="px-3 py-2 text-xs text-red-600">
-                        {logoutError}
-                      </p>
-                    )}
+                    <div className="py-1">
+                      {accountLinks.map((item) => {
+                        const Icon = item.icon;
+                        return (
+                          <Link
+                            key={item.href}
+                            href={item.href}
+                            onClick={() => setProfileMenuOpen(false)}
+                            className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-foreground transition hover:bg-accent hover:text-accent-foreground"
+                          >
+                            <Icon className="size-4 text-muted-foreground" />
+                            {item.title}
+                          </Link>
+                        );
+                      })}
+                    </div>
 
                     <button
                       type="button"
                       onClick={handleLogout}
                       disabled={loggingOut}
-                      className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm text-red-600 transition hover:bg-red-50 disabled:opacity-60"
+                      className="flex w-full items-center gap-3 rounded-lg border-t border-border px-3 py-2.5 text-left text-sm text-destructive transition hover:bg-destructive/10 disabled:opacity-60"
                     >
-                      <LogOut className="h-4 w-4" />
+                      <LogOut className="size-4" />
                       {loggingOut ? "Logging out..." : "Logout"}
                     </button>
                   </div>
@@ -179,95 +204,75 @@ export default function Navbar() {
               )}
             </div>
           ) : (
-            <>
-              <Button asChild variant="ghost">
-                <Link href="/login">Login</Link>
-              </Button>
-
-              <Button asChild className="bg-emerald-600 hover:bg-emerald-700">
-                <Link href="/register">Register</Link>
-              </Button>
-            </>
+            <Button render={<Link href="/login" />}>Login</Button>
           )}
         </div>
 
-        {/* Mobile menu button */}
-        <button
-          type="button"
-          onClick={() => setMobileMenuOpen((previous) => !previous)}
-          className="rounded-lg p-2 text-slate-700 hover:bg-slate-100 md:hidden"
-          aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
-          aria-expanded={mobileMenuOpen}
-        >
-          {mobileMenuOpen ? (
-            <X className="h-6 w-6" />
-          ) : (
-            <Menu className="h-6 w-6" />
-          )}
-        </button>
+        <div className="flex items-center gap-1 md:hidden">
+          <ThemeToggle />
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen((previous) => !previous)}
+            className="rounded-lg p-2 text-foreground hover:bg-muted"
+            aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={mobileMenuOpen}
+          >
+            {mobileMenuOpen ? <X className="size-6" /> : <Menu className="size-6" />}
+          </button>
+        </div>
       </nav>
 
-      {/* Mobile menu */}
       {mobileMenuOpen && (
-        <div className="border-t bg-white px-4 py-4 shadow-lg md:hidden">
+        <div className="border-t border-border bg-background px-4 py-4 shadow-lg md:hidden">
           <div className="mx-auto flex max-w-7xl flex-col gap-1">
             {navLinks.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                onClick={() => setMobileMenuOpen(false)}
                 className={`rounded-lg px-4 py-3 text-sm font-medium transition ${
                   isActive(item.href)
-                    ? "bg-emerald-50 text-emerald-700"
-                    : "text-slate-700 hover:bg-slate-50"
+                    ? "bg-accent text-accent-foreground"
+                    : "text-foreground hover:bg-muted"
                 }`}
               >
                 {item.title}
               </Link>
             ))}
 
-            <div className="my-2 border-t" />
+            <div className="my-2 border-t border-border" />
 
-            {isPending ? (
-              <div className="h-10 animate-pulse rounded-lg bg-slate-100" />
-            ) : user ? (
+            {user ? (
               <>
-                <div className="flex items-center gap-3 px-4 py-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 font-bold text-emerald-700">
-                    {userInitial}
-                  </span>
-
+                <div className="flex items-center gap-3 px-3 py-3">
+                  <Avatar size="lg">
+                    {userImage ? (
+                      <AvatarImage src={userImage} alt={userName} />
+                    ) : null}
+                    <AvatarFallback className="bg-primary/10 font-bold text-primary">
+                      {userInitial}
+                    </AvatarFallback>
+                  </Avatar>
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-slate-900">
-                      {userName}
-                    </p>
-                    <p className="truncate text-xs text-slate-500">
+                    <p className="truncate text-sm font-semibold">{userName}</p>
+                    <p className="truncate text-xs text-muted-foreground">
                       {userEmail}
                     </p>
                   </div>
                 </div>
 
-                <Link
-                  href="/dashboard"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="rounded-lg px-4 py-3 text-sm font-medium text-slate-700 hover:bg-emerald-50"
-                >
-                  Dashboard
-                </Link>
-
-                <Link
-                  href="/dashboard/my-events"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="rounded-lg px-4 py-3 text-sm font-medium text-slate-700 hover:bg-emerald-50"
-                >
-                  My Events
-                </Link>
-
-                {logoutError && (
-                  <p className="px-4 py-2 text-xs text-red-600">
-                    {logoutError}
-                  </p>
-                )}
+                {accountLinks.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-foreground hover:bg-muted"
+                    >
+                      <Icon className="size-4 text-muted-foreground" />
+                      {item.title}
+                    </Link>
+                  );
+                })}
 
                 <Button
                   type="button"
@@ -276,27 +281,17 @@ export default function Navbar() {
                   onClick={handleLogout}
                   disabled={loggingOut}
                 >
-                  <LogOut className="mr-2 h-4 w-4" />
+                  <LogOut className="mr-2 size-4" />
                   {loggingOut ? "Logging out..." : "Logout"}
                 </Button>
               </>
             ) : (
-              <div className="grid grid-cols-2 gap-3 pt-2">
-                <Button asChild variant="outline">
-                  <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                    Login
-                  </Link>
-                </Button>
-
-                <Button asChild className="bg-emerald-600 hover:bg-emerald-700">
-                  <Link
-                    href="/register"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Register
-                  </Link>
-                </Button>
-              </div>
+              <Button
+                className="mt-2 w-full"
+                render={<Link href="/login" />}
+              >
+                Login
+              </Button>
             )}
           </div>
         </div>
