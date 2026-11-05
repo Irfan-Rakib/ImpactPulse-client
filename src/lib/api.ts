@@ -1,7 +1,6 @@
 const API_URL = (
   process.env.NEXT_PUBLIC_BACKEND_URL ||
-  process.env.BACKEND_API_URL_LIVE ||
-  "http://localhost:5000"
+  "https://impact-pulse-server.vercel.app/"
 ).replace(/\/$/, "");
 
 interface TokenCache {
