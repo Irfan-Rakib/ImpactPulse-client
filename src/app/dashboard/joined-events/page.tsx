@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 import Link from "next/link";
 import { RefreshCw, Ticket } from "lucide-react";
 
@@ -8,37 +8,21 @@ import EventCard from "@/components/shared/event-card";
 import EventCardSkeleton from "@/components/shared/event-card-skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useApiData } from "@/hooks/use-api-data";
 import { apiRequest } from "@/lib/api";
-import type { EventsResponse, EventItem } from "@/types/event";
+import type { EventsResponse } from "@/types/event";
 
 export default function JoinedEventsPage() {
-  const [events, setEvents] = useState<EventItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const fetchEvents = useCallback(
+    () => apiRequest<EventsResponse>("/api/my/joined-events", {}, true),
+    [],
+  );
+  const { data, loading, error, reload } = useApiData(fetchEvents);
+  const events = data?.events ?? [];
 
-  const loadEvents = useCallback(async () => {
-    setLoading(true);
-    setError("");
-
-    try {
-      const data = await apiRequest<EventsResponse>(
-        "/api/my/joined-events",
-        {},
-        true,
-      );
-      setEvents(data.events || []);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Unable to load your joined events.",
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadEvents();
-  }, [loadEvents]);
+  function reloadEvents() {
+    void reload();
+  }
 
   return (
     <div className="space-y-7">
@@ -57,7 +41,7 @@ export default function JoinedEventsPage() {
           </p>
         </div>
 
-        <Button variant="outline" onClick={loadEvents} disabled={loading}>
+        <Button variant="outline" onClick={reloadEvents} disabled={loading}>
           <RefreshCw className={`mr-2 size-4 ${loading ? "animate-spin" : ""}`} />
           Refresh
         </Button>
@@ -66,7 +50,7 @@ export default function JoinedEventsPage() {
       {error && (
         <div className="flex flex-col justify-between gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 sm:flex-row sm:items-center">
           <p className="text-sm text-destructive">{error}</p>
-          <Button size="sm" variant="outline" onClick={loadEvents}>
+          <Button size="sm" variant="outline" onClick={reloadEvents}>
             Try again
           </Button>
         </div>

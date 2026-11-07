@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
+import { useState, type ChangeEvent, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -19,9 +19,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useIsMounted } from "@/hooks/use-mounted";
 import { apiRequest } from "@/lib/api";
 import { EVENT_TYPES } from "@/lib/constants";
-import { getLocalDateInputValue, toDateInputValue } from "@/lib/date";
+import {
+  getTomorrowDateInputValue,
+  toDateInputValue,
+} from "@/lib/date";
 import type { EventItem, EventResponse } from "@/types/event";
 import { toast } from "@/components/ui/toast";
 
@@ -43,41 +47,36 @@ const emptyForm = {
   imageUrl: "",
 };
 
+function toFormState(event: EventItem) {
+  return {
+    title: event.title || "",
+    description: event.description || "",
+    category: event.category || "Cleanup",
+    location: event.location || "",
+    eventDate: event.eventDate ? toDateInputValue(event.eventDate) : "",
+    startTime: event.startTime || "",
+    endTime: event.endTime || "",
+    volunteersNeeded: String(event.volunteersNeeded || 20),
+    imageUrl: event.imageUrl || "",
+  };
+}
+
 export default function EventForm({
   mode,
   eventId,
   initialEvent,
 }: EventFormProps) {
   const router = useRouter();
+  const isMounted = useIsMounted();
 
-  const [form, setForm] = useState(emptyForm);
+  const [form, setForm] = useState(() =>
+    initialEvent ? toFormState(initialEvent) : emptyForm,
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [today, setToday] = useState("");
 
-  // Get today's date after the component mounts.
-  useEffect(() => {
-    setToday(getLocalDateInputValue(new Date()));
-  }, []);
-
-  // Load existing event information in edit mode.
-  useEffect(() => {
-    if (!initialEvent) return;
-
-    setForm({
-      title: initialEvent.title || "",
-      description: initialEvent.description || "",
-      category: initialEvent.category || "Cleanup",
-      location: initialEvent.location || "",
-      eventDate: initialEvent.eventDate
-        ? toDateInputValue(initialEvent.eventDate)
-        : "",
-      startTime: initialEvent.startTime || "",
-      endTime: initialEvent.endTime || "",
-      volunteersNeeded: String(initialEvent.volunteersNeeded || 20),
-      imageUrl: initialEvent.imageUrl || "",
-    });
-  }, [initialEvent]);
+  // Compute the minimum date only after hydration to avoid timezone mismatches.
+  const minEventDate = isMounted ? getTomorrowDateInputValue() : "";
 
   function handleChange(
     event: ChangeEvent<
@@ -91,7 +90,7 @@ export default function EventForm({
   }
 
   function validateForm() {
-    if (!today) {
+    if (!minEventDate) {
       return "Please wait while the date is being prepared.";
     }
 
@@ -107,8 +106,8 @@ export default function EventForm({
       return "Please provide a valid event location.";
     }
 
-    if (!form.eventDate || form.eventDate < today) {
-      return "Event date must be today or a future date.";
+    if (!form.eventDate || form.eventDate < minEventDate) {
+      return "Event date must be in the future.";
     }
 
     const volunteers = Number(form.volunteersNeeded);
@@ -328,11 +327,11 @@ export default function EventForm({
                 id="eventDate"
                 name="eventDate"
                 type="date"
-                min={today || undefined}
+                min={minEventDate || undefined}
                 value={form.eventDate}
                 onChange={handleChange}
                 required
-                disabled={loading || !today}
+                disabled={loading || !minEventDate}
                 className="h-11"
               />
             </div>
@@ -482,7 +481,7 @@ export default function EventForm({
               Cancel
             </Button>
 
-            <Button type="submit" disabled={loading || !today}>
+            <Button type="submit" disabled={loading || !minEventDate}>
               {loading ? (
                 <Loader2 className="mr-2 size-4 animate-spin" />
               ) : mode === "create" ? (

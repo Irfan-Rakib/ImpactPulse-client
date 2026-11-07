@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useState, type FormEvent } from "react";
 import { CalendarDays, Search, SlidersHorizontal, X } from "lucide-react";
 
 import EventCard from "@/components/shared/event-card";
@@ -8,64 +8,69 @@ import EventCardSkeleton from "@/components/shared/event-card-skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useApiData } from "@/hooks/use-api-data";
 import { apiRequest } from "@/lib/api";
 import { EVENT_TYPES } from "@/lib/constants";
-import type { EventsResponse, EventItem } from "@/types/event";
+import type { EventsResponse } from "@/types/event";
 
 const filters = ["All", ...EVENT_TYPES];
 
 export default function EventsPage() {
-  const [events, setEvents] = useState<EventItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
 
-  const loadEvents = useCallback(async () => {
-    setLoading(true);
-    setError("");
+  const fetchEvents = useCallback(() => {
+    const params = new URLSearchParams({
+      page: String(page),
+      limit: "9",
+    });
 
-    try {
-      const params = new URLSearchParams({
-        page: String(page),
-        limit: "9",
-      });
+    if (search) params.set("search", search);
+    if (category !== "All") params.set("category", category);
 
-      if (search.trim()) params.set("search", search.trim());
-      if (category !== "All") params.set("category", category);
-
-      const result = await apiRequest<EventsResponse>(
-        `/api/events?${params.toString()}`,
-      );
-
-      setEvents(result.events || []);
-      setTotal(result.total || 0);
-      setTotalPages(Math.max(1, result.totalPages || 1));
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Unable to load events. Try again.",
-      );
-    } finally {
-      setLoading(false);
-    }
+    return apiRequest<EventsResponse>(`/api/events?${params.toString()}`);
   }, [category, page, search]);
 
-  useEffect(() => {
-    loadEvents();
-  }, [loadEvents]);
+  const { data, loading, error, reload } = useApiData(fetchEvents);
+
+  const events = data?.events ?? [];
+  const total = data?.total ?? 0;
+  const totalPages = Math.max(1, data?.totalPages ?? 1);
+
+  function reloadEvents() {
+    void reload();
+  }
+
+  function goToPage(nextPage: number) {
+    const target = Math.min(totalPages, Math.max(1, nextPage));
+
+    if (target !== page) setPage(target);
+  }
 
   function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    const nextSearch = searchInput.trim();
+
+    if (nextSearch === search && page === 1) {
+      reloadEvents();
+      return;
+    }
+
+    setSearch(nextSearch);
     setPage(1);
-    setSearch(searchInput);
   }
 
   function clearFilters() {
     setSearchInput("");
+
+    if (!search && category === "All" && page === 1) {
+      reloadEvents();
+      return;
+    }
+
     setSearch("");
     setCategory("All");
     setPage(1);
@@ -126,6 +131,8 @@ export default function EventsPage() {
                 key={item}
                 type="button"
                 onClick={() => {
+                  if (item === category && page === 1) return;
+
                   setCategory(item);
                   setPage(1);
                 }}
@@ -155,7 +162,7 @@ export default function EventsPage() {
         {error ? (
           <div className="mt-6 rounded-2xl border border-destructive/30 bg-destructive/5 p-8 text-center">
             <p className="font-semibold text-destructive">{error}</p>
-            <Button variant="outline" className="mt-4" onClick={loadEvents}>
+            <Button variant="outline" className="mt-4" onClick={reloadEvents}>
               Try again
             </Button>
           </div>
@@ -194,7 +201,7 @@ export default function EventsPage() {
                 <Button
                   variant="outline"
                   disabled={page === 1}
-                  onClick={() => setPage((value) => Math.max(1, value - 1))}
+                  onClick={() => goToPage(page - 1)}
                 >
                   Previous
                 </Button>
@@ -203,7 +210,7 @@ export default function EventsPage() {
                     key={index}
                     variant={page === index + 1 ? "default" : "outline"}
                     size="icon"
-                    onClick={() => setPage(index + 1)}
+                    onClick={() => goToPage(index + 1)}
                     aria-label={`Go to page ${index + 1}`}
                   >
                     {index + 1}
@@ -212,7 +219,7 @@ export default function EventsPage() {
                 <Button
                   variant="outline"
                   disabled={page === totalPages}
-                  onClick={() => setPage((value) => Math.min(totalPages, value + 1))}
+                  onClick={() => goToPage(page + 1)}
                 >
                   Next
                 </Button>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useState, type FormEvent } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -9,8 +9,6 @@ import {
   HandHeart,
   HeartHandshake,
   Leaf,
-  Loader2,
-  MapPin,
   Megaphone,
   Send,
   ShieldCheck,
@@ -24,9 +22,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/toast";
+import { useApiData } from "@/hooks/use-api-data";
 import { apiRequest } from "@/lib/api";
 import { SITE } from "@/lib/constants";
-import type { EventsResponse, EventItem } from "@/types/event";
+import type { EventsResponse } from "@/types/event";
 
 const features = [
   {
@@ -83,30 +82,14 @@ const gallery = [
 ];
 
 export default function HomePage() {
-  const [events, setEvents] = useState<EventItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [email, setEmail] = useState("");
 
-  const loadEvents = useCallback(async () => {
-    setLoading(true);
-    setError("");
-
-    try {
-      const result = await apiRequest<EventsResponse>("/api/events?limit=6");
-      setEvents(result.events || []);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Unable to load upcoming events.",
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadEvents();
-  }, [loadEvents]);
+  const fetchEvents = useCallback(
+    () => apiRequest<EventsResponse>("/api/events?limit=6"),
+    [],
+  );
+  const { data, loading, error, reload } = useApiData(fetchEvents);
+  const events = data?.events ?? [];
 
   function handleNewsletter(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -283,7 +266,7 @@ export default function HomePage() {
           ) : error ? (
             <div className="mt-10 rounded-2xl border border-destructive/30 bg-destructive/5 p-8 text-center">
               <p className="font-semibold text-destructive">{error}</p>
-              <Button variant="outline" className="mt-4" onClick={loadEvents}>
+              <Button variant="outline" className="mt-4" onClick={() => void reload()}>
                 Try again
               </Button>
             </div>

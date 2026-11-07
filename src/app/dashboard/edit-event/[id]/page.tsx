@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { AlertCircle, ArrowLeft, Loader2 } from "lucide-react";
@@ -9,9 +9,10 @@ import EventForm from "@/components/shared/event-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useApiData } from "@/hooks/use-api-data";
 import { apiRequest } from "@/lib/api";
 import { useSession } from "@/lib/auth-client";
-import type { EventItem, EventResponse } from "@/types/event";
+import type { EventResponse } from "@/types/event";
 
 export default function EditEventPage() {
   const params = useParams<{ id: string }>();
@@ -19,27 +20,12 @@ export default function EditEventPage() {
   const { data: session, isPending } = useSession();
   const userId = session?.user?.id;
 
-  const [event, setEvent] = useState<EventItem | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  const loadEvent = useCallback(async () => {
-    try {
-      setError("");
-      const data = await apiRequest<EventResponse>(`/api/events/${id}`);
-      setEvent(data.event);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Unable to load this event.",
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, [id]);
-
-  useEffect(() => {
-    loadEvent();
-  }, [loadEvent]);
+  const fetchEvent = useCallback(
+    () => apiRequest<EventResponse>(`/api/events/${id}`),
+    [id],
+  );
+  const { data, loading, error } = useApiData(fetchEvent);
+  const event = data?.event ?? null;
 
   const isOwner = Boolean(userId && event && event.createdBy === userId);
 
@@ -109,7 +95,12 @@ export default function EditEventPage() {
         </p>
       </div>
 
-      <EventForm mode="edit" eventId={event.eventId || event._id} initialEvent={event} />
+      <EventForm
+        key={event.eventId || event._id}
+        mode="edit"
+        eventId={event.eventId || event._id}
+        initialEvent={event}
+      />
 
       <Card>
         <CardContent className="flex items-center gap-3 p-4 text-sm text-muted-foreground">

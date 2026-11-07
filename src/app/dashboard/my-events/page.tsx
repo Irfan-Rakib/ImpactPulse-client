@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import Link from "next/link";
 import {
   CalendarDays,
@@ -15,35 +15,24 @@ import EventCardSkeleton from "@/components/shared/event-card-skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";
+import { useApiData } from "@/hooks/use-api-data";
 import { apiRequest } from "@/lib/api";
-import type { EventsResponse, EventItem } from "@/types/event";
+import type { EventsResponse } from "@/types/event";
 
 export default function MyEventsPage() {
-  const [events, setEvents] = useState<EventItem[]>([]);
-  const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
-  const [error, setError] = useState("");
 
-  const loadEvents = useCallback(async () => {
-    setLoading(true);
-    setError("");
+  const fetchEvents = useCallback(
+    () => apiRequest<EventsResponse>("/api/my/events", {}, true),
+    [],
+  );
+  const { data, loading, error, reload } = useApiData(fetchEvents);
+  const events = data?.events ?? [];
 
-    try {
-      const data = await apiRequest<EventsResponse>("/api/events", {}, true);
-      setEvents(data.events || []);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Unable to load your events.",
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadEvents();
-  }, [loadEvents]);
+  function reloadEvents() {
+    void reload();
+  }
 
   async function handleDelete(id: string) {
     setDeletingId(id);
@@ -55,9 +44,7 @@ export default function MyEventsPage() {
         true,
       );
 
-      setEvents((previous) =>
-        previous.filter((event) => event.eventId !== id && event._id !== id),
-      );
+      await reload();
       setConfirmId(null);
       toast.add({
         title: "Event deleted",
@@ -94,7 +81,7 @@ export default function MyEventsPage() {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={loadEvents} disabled={loading}>
+          <Button variant="outline" onClick={reloadEvents} disabled={loading}>
             <RefreshCw
               className={`mr-2 size-4 ${loading ? "animate-spin" : ""}`}
             />
@@ -110,7 +97,7 @@ export default function MyEventsPage() {
       {error && (
         <div className="flex flex-col justify-between gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 sm:flex-row sm:items-center">
           <p className="text-sm text-destructive">{error}</p>
-          <Button size="sm" variant="outline" onClick={loadEvents}>
+          <Button size="sm" variant="outline" onClick={reloadEvents}>
             Try again
           </Button>
         </div>

@@ -2,11 +2,11 @@
 
 **ImpactPulse** is a community-driven social development platform that connects people who want to make a positive impact in their communities. Users can create social service events, join volunteer activities, and manage their participation through a simple and user-friendly interface.
 
-🌐 **Live Website:** [[Click Here](https://impact-pulse-one.vercel.app/)]
+🌐 **Live Website:** [impact-pulse-one.vercel.app](https://impact-pulse-one.vercel.app/)
 
-💻 **Client Repository:** [[Click Here](https://github.com/Irfan-Rakib/ImpactPulse-client)]
+💻 **Client Repository:** [github.com/Irfan-Rakib/ImpactPulse-client](https://github.com/Irfan-Rakib/ImpactPulse-client)
 
-⚙️ **Server Repository:** [[Click Here](https://github.com/Irfan-Rakib/ImpactPulse-server)]
+⚙️ **Server Repository:** [github.com/Irfan-Rakib/ImpactPulse-server](https://github.com/Irfan-Rakib/ImpactPulse-server)
 
 ---
 
@@ -52,33 +52,31 @@
 ## 📁 Project Structure
 
 ```text
-ImpactPulse/
+impactpulse-client/
 │
-├── client/
-│   ├── public/
-│   ├── src/
-│   │   ├── app/
-│   │   │   ├── about/
-│   │   │   ├── contact/
-│   │   │   ├── dashboard/
-│   │   │   │   ├── create-event/
-│   │   │   │   ├── edit-event/
-│   │   │   │   ├── joined-events/
-│   │   │   │   └── my-events/
-│   │   │   ├── events/
+├── public/
+├── src/
+│   ├── app/
+│   │   ├── (auth)/
 │   │   │   ├── login/
 │   │   │   └── register/
-│   │   ├── components/
-│   │   ├── lib/
-│   │   └── types/
-│   ├── next.config.ts
-│   └── package.json
-│
-└── server/
-    ├── index.js
-    ├── .env
-    └── package.json
+│   │   ├── dashboard/
+│   │   │   ├── create-event/
+│   │   │   ├── edit-event/
+│   │   │   ├── joined-events/
+│   │   │   ├── my-events/
+│   │   │   └── profile/
+│   │   ├── events/
+│   │   └── api/auth/[...all]/
+│   ├── components/
+│   ├── hooks/
+│   ├── lib/
+│   └── types/
+├── next.config.ts
+└── package.json
 ```
+
+The Express API lives in a separate sibling repository, `impactpulse-server`.
 
 ---
 
@@ -101,11 +99,11 @@ cd ImpactPulse
 ### 3. Setup the Backend
 
 ```bash
-cd server
+cd ../impactpulse-server
 npm install
 ```
 
-Create a `.env` file inside the `server` directory:
+Create a `.env` file inside the `impactpulse-server` directory:
 
 ```env
 PORT=5000
@@ -117,36 +115,42 @@ CLIENT_URL=http://localhost:3000
 BETTER_AUTH_URL=http://localhost:3000
 ```
 
-Start the backend development server:
+Start the backend server:
 
 ```bash
-npm run dev
+node index.js
 ```
 
-The backend will run at:
-
-```text
-https://impact-pulse-server.vercel.app/
-```
+The API will run locally at `http://localhost:5000`.
 
 ### 4. Setup the Frontend
 
 Open another terminal:
 
 ```bash
-cd client
+cd impactpulse-client
 npm install
 ```
 
-Create a `.env.local` file inside the `client` directory:
+Create a `.env` file inside the `impactpulse-client` directory:
 
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:5000
+MONGODB_URI=your_mongodb_connection_string
+
+BETTER_AUTH_SECRET=your_better_auth_secret
 
 BETTER_AUTH_URL=http://localhost:3000
+
+NEXT_PUBLIC_BACKEND_URL=http://localhost:5000
+
+NEXT_PUBLIC_BETTER_AUTH_URL=http://localhost:3000
+
+GOOGLE_CLIENT_ID=your_google_client_id
+
+GOOGLE_CLIENT_SECRET=your_google_client_secret
 ```
 
-Configure Better Auth with your MongoDB connection and authentication providers. For Google authentication, add your Google OAuth credentials to the appropriate server-side environment configuration.
+Better Auth runs inside the Next.js app and shares the MongoDB database with the API. Google authentication requires OAuth credentials; email/password works without them.
 
 Start the frontend:
 
@@ -185,15 +189,17 @@ http://localhost:3000
 
 Keep all sensitive credentials in environment files.
 
-| Variable               | Description                            |
-| ---------------------- | -------------------------------------- |
-| `MONGODB_URI`          | MongoDB connection string              |
-| `PORT`                 | Backend server port                    |
-| `CLIENT_URL`           | Frontend application URL               |
-| `BETTER_AUTH_URL`      | Better Auth server URL                 |
-| `NEXT_PUBLIC_API_URL`  | Backend API URL for frontend requests  |
-| `GOOGLE_CLIENT_ID`     | Google OAuth client ID, if enabled     |
-| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret, if enabled |
+| Variable                    | Description                                     |
+| --------------------------- | ----------------------------------------------- |
+| `MONGODB_URI`               | MongoDB connection string                       |
+| `PORT`                      | Backend server port                             |
+| `CLIENT_URL`                | Frontend application URL (CORS)                 |
+| `BETTER_AUTH_URL`           | Better Auth server URL                          |
+| `BETTER_AUTH_SECRET`        | Better Auth signing secret                      |
+| `NEXT_PUBLIC_BACKEND_URL`   | Backend API URL used by browser requests        |
+| `NEXT_PUBLIC_BETTER_AUTH_URL` | Better Auth URL used by the browser client    |
+| `GOOGLE_CLIENT_ID`          | Google OAuth client ID, if enabled              |
+| `GOOGLE_CLIENT_SECRET`      | Google OAuth client secret, if enabled          |
 
 **Security:** Never upload `.env` or `.env.local` files containing credentials to GitHub.
 

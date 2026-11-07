@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
@@ -21,11 +21,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/components/ui/toast";
+import { useApiData } from "@/hooks/use-api-data";
 import { apiRequest } from "@/lib/api";
 import { useSession } from "@/lib/auth-client";
 import { EVENT_TYPE_STYLES } from "@/lib/constants";
 import { formatEventDate, isPastDate } from "@/lib/date";
-import type { EventItem, EventResponse } from "@/types/event";
+import type { EventResponse } from "@/types/event";
 
 export default function EventDetailsPage() {
   const params = useParams<{ id: string }>();
@@ -33,42 +34,29 @@ export default function EventDetailsPage() {
   const { data: session } = useSession();
   const userId = session?.user?.id;
 
-  const [event, setEvent] = useState<EventItem | null>(null);
-  const [loading, setLoading] = useState(true);
+  const fetchEvent = useCallback(
+    () => apiRequest<EventResponse>(`/api/events/${id}`),
+    [id],
+  );
+  const { data, loading, error, reload } = useApiData(fetchEvent);
+  const event = data?.event ?? null;
+
   const [actionLoading, setActionLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  const loadEvent = useCallback(async () => {
-    try {
-      setError("");
-      const data = await apiRequest<EventResponse>(`/api/events/${id}`);
-      setEvent(data.event);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Unable to load this event.",
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, [id]);
-
-  useEffect(() => {
-    loadEvent();
-  }, [loadEvent]);
+  const [actionError, setActionError] = useState("");
 
   async function handleJoin() {
     if (!event) return;
     setActionLoading(true);
-    setError("");
+    setActionError("");
 
     try {
-      const data = await apiRequest<EventResponse>(
+      await apiRequest<EventResponse>(
         `/api/events/${id}/join`,
         { method: "POST", body: JSON.stringify({}) },
         true,
       );
 
-      if (data.event) setEvent(data.event);
+      await reload();
       toast.add({
         title: "You're in!",
         description: "You joined this event successfully.",
@@ -77,7 +65,7 @@ export default function EventDetailsPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Unable to join this event.";
-      setError(message);
+      setActionError(message);
       toast.add({ title: "Could not join", description: message, type: "error" });
     } finally {
       setActionLoading(false);
@@ -87,7 +75,7 @@ export default function EventDetailsPage() {
   async function handleLeave() {
     if (!event) return;
     setActionLoading(true);
-    setError("");
+    setActionError("");
 
     try {
       await apiRequest<{ message?: string }>(
@@ -95,7 +83,7 @@ export default function EventDetailsPage() {
         { method: "DELETE" },
         true,
       );
-      await loadEvent();
+      await reload();
       toast.add({
         title: "You left the event",
         description: "Your volunteer spot was released.",
@@ -104,14 +92,14 @@ export default function EventDetailsPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Unable to leave this event.";
-      setError(message);
+      setActionError(message);
       toast.add({ title: "Could not leave", description: message, type: "error" });
     } finally {
       setActionLoading(false);
     }
   }
 
-  if (loading) {
+  if (loading && !event) {
     return (
       <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
         <Skeleton className="mb-6 h-9 w-36" />
@@ -261,7 +249,7 @@ export default function EventDetailsPage() {
 
                 {event.participants?.length > 0 && (
                   <div className="border-t border-border pt-6">
-                    <h2 className="text-lg font-bold">Who's joining</h2>
+                    <h2 className="text-lg font-bold">Who&apos;s joining</h2>
                     <div className="mt-3 flex flex-wrap gap-2">
                       {event.participants.slice(0, 8).map((person) => (
                         <div
@@ -383,8 +371,10 @@ export default function EventDetailsPage() {
                   </Button>
                 )}
 
-                {error && event && (
-                  <p className="text-sm text-destructive">{error}</p>
+                {(error || actionError) && event && (
+                  <p className="text-sm text-destructive">
+                    {actionError || error}
+                  </p>
                 )}
 
                 <p className="text-center text-xs text-muted-foreground">

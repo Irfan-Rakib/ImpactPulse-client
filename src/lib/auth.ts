@@ -1,4 +1,5 @@
 import { betterAuth } from "better-auth";
+import { APIError, createAuthMiddleware } from "better-auth/api";
 import { jwt } from "better-auth/plugins";
 import { MongoClient } from "mongodb";
 import { mongodbAdapter } from "@better-auth/mongo-adapter";
@@ -16,6 +17,9 @@ export const auth = betterAuth({
 
   emailAndPassword: {
     enabled: true,
+    // The assignment requires a minimum of 6 characters; Better Auth defaults
+    // to 8, which would reject otherwise valid registrations.
+    minPasswordLength: 6,
   },
 
   socialProviders: {
@@ -35,6 +39,25 @@ export const auth = betterAuth({
   database: mongodbAdapter(db, {
     client,
   }),
+
+  hooks: {
+    before: createAuthMiddleware(async (ctx) => {
+      if (ctx.path !== "/sign-up/email") return;
+
+      const password = ctx.body?.password;
+
+      if (
+        typeof password !== "string" ||
+        !/[A-Z]/.test(password) ||
+        !/[a-z]/.test(password)
+      ) {
+        throw new APIError("BAD_REQUEST", {
+          message:
+            "Password must include at least one uppercase and one lowercase letter.",
+        });
+      }
+    }),
+  },
 
   plugins: [
     jwt({

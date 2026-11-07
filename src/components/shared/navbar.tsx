@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -53,10 +53,10 @@ export default function Navbar() {
   const userImage = user?.image || "";
   const userInitial = userName.charAt(0).toUpperCase();
 
-  useEffect(() => {
+  function closeMenus() {
     setMobileMenuOpen(false);
     setProfileMenuOpen(false);
-  }, [pathname]);
+  }
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";
@@ -69,6 +69,7 @@ export default function Navbar() {
     try {
       await signOut();
       clearAuthToken();
+      closeMenus();
       toast.add({
         title: "Logged out",
         description: "You have been signed out safely.",
@@ -229,6 +230,7 @@ export default function Navbar() {
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={closeMenus}
                 className={`rounded-lg px-4 py-3 text-sm font-medium transition ${
                   isActive(item.href)
                     ? "bg-accent text-accent-foreground"
@@ -266,6 +268,7 @@ export default function Navbar() {
                     <Link
                       key={item.href}
                       href={item.href}
+                      onClick={closeMenus}
                       className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-foreground hover:bg-muted"
                     >
                       <Icon className="size-4 text-muted-foreground" />

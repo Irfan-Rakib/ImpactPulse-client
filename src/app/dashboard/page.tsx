@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -19,43 +19,31 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useApiData } from "@/hooks/use-api-data";
 import { apiRequest } from "@/lib/api";
 import { useSession } from "@/lib/auth-client";
-import type { EventItem, EventsResponse } from "@/types/event";
+import type { EventsResponse } from "@/types/event";
 
 export default function DashboardPage() {
   const { data: session } = useSession();
   const firstName = session?.user?.name?.split(" ")[0] || "there";
 
-  const [myEvents, setMyEvents] = useState<EventItem[]>([]);
-  const [joinedEvents, setJoinedEvents] = useState<EventItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const fetchDashboard = useCallback(async () => {
+    const [created, joined] = await Promise.all([
+      apiRequest<EventsResponse>("/api/my/events", {}, true),
+      apiRequest<EventsResponse>("/api/my/joined-events", {}, true),
+    ]);
 
-  const loadDashboard = useCallback(async () => {
-    setLoading(true);
-    setError("");
-
-    try {
-      const [created, joined] = await Promise.all([
-        apiRequest<EventsResponse>("/api/my/events", {}, true),
-        apiRequest<EventsResponse>("/api/my/joined-events", {}, true),
-      ]);
-
-      setMyEvents(created.events || []);
-      setJoinedEvents(joined.events || []);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Unable to load your dashboard.",
-      );
-    } finally {
-      setLoading(false);
-    }
+    return { created, joined };
   }, []);
 
-  useEffect(() => {
-    loadDashboard();
-  }, [loadDashboard]);
+  const { data, loading, error, reload } = useApiData(fetchDashboard);
+  const myEvents = data?.created.events ?? [];
+  const joinedEvents = data?.joined.events ?? [];
+
+  function reloadDashboard() {
+    void reload();
+  }
 
   const totalParticipants = myEvents.reduce(
     (total, event) => total + (event.participantCount || 0),
@@ -125,7 +113,7 @@ export default function DashboardPage() {
       {error && (
         <div className="flex flex-col justify-between gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 sm:flex-row sm:items-center">
           <p className="text-sm text-destructive">{error}</p>
-          <Button size="sm" variant="outline" onClick={loadDashboard}>
+          <Button size="sm" variant="outline" onClick={reloadDashboard}>
             Try again
           </Button>
         </div>

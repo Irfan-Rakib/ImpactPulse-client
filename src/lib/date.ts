@@ -6,6 +6,13 @@ export function getLocalDateInputValue(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
+export function getTomorrowDateInputValue(date: Date = new Date()): string {
+  const tomorrow = new Date(date);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  return getLocalDateInputValue(tomorrow);
+}
+
 export function toDateInputValue(value: string | Date): string {
   const date = new Date(value);
 

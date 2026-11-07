@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import {
   CalendarDays,
@@ -26,16 +26,15 @@ export default function ProfilePage() {
   const { data: session, isPending, refetch } = useSession();
   const user = session?.user;
 
-  const [name, setName] = useState("");
-  const [image, setImage] = useState("");
+  // Null means "use the value from the session". This keeps the form in sync
+  // when the session loads or refreshes without copying props into state.
+  const [nameOverride, setNameOverride] = useState<string | null>(null);
+  const [imageOverride, setImageOverride] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    if (!user) return;
-    setName(user.name || "");
-    setImage(user.image || "");
-  }, [user]);
+  const name = nameOverride ?? user?.name ?? "";
+  const image = imageOverride ?? user?.image ?? "";
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -84,6 +83,8 @@ export default function ProfilePage() {
       }
 
       await refetch?.();
+      setNameOverride(null);
+      setImageOverride(null);
       toast.add({
         title: "Profile updated",
         description: "Your name and photo have been saved.",
@@ -194,7 +195,7 @@ export default function ProfilePage() {
                 <Input
                   id="name"
                   value={name}
-                  onChange={(event) => setName(event.target.value)}
+                  onChange={(event) => setNameOverride(event.target.value)}
                   className="h-11 pl-10"
                   minLength={2}
                   maxLength={100}
@@ -226,7 +227,7 @@ export default function ProfilePage() {
                   id="image"
                   type="url"
                   value={image}
-                  onChange={(event) => setImage(event.target.value)}
+                  onChange={(event) => setImageOverride(event.target.value)}
                   placeholder="https://example.com/photo.jpg"
                   className="h-11 pl-10"
                   disabled={saving}
